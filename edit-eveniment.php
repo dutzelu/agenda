@@ -1,5 +1,10 @@
 <?php
 include "conectaredb.php";
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php"); // Redirecționare la login dacă utilizatorul nu este logat
+    exit;
+}
 
 // Preluare episcopi
 $stmt_episcopi = $conn->prepare("SELECT id, nume_scurt_episcop FROM episcopi");
@@ -49,7 +54,17 @@ if (isset($_GET['id']) || isset($_POST['id'])) {
 }
 ?>
 <body>
-<div class="container mt-5">
+<div class="container mt-5 ">
+    <div class="row">
+    <!-- Bara laterală -->
+    <div class="col-md-3 g-5">
+
+        <?php include 'sidebar.php';?>
+
+    </div>
+
+    <!-- Conținut principal -->
+    <div class="col-md-9">
     <h2>Editare Eveniment</h2>
     <?php if (isset($message)): ?>
         <div class="alert alert-success"><?php echo $message; ?></div>

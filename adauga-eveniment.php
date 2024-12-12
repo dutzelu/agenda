@@ -1,5 +1,10 @@
 <?php
 include "conectaredb.php";
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php"); // Redirecționare la login dacă utilizatorul nu este logat
+    exit;
+}
 
 $success = NULL;
 
@@ -30,14 +35,20 @@ $conn->close();
 include "header.php";
 ?>
 
+<body>
+<div class="container mt-5 ">
 
+    <div class="row">
+        <!-- Bara laterală -->
+        <div class="col-md-3 g-5">
 
+            <?php include 'sidebar.php';?>
 
-<body onload="showMessage()">
+        </div>
+    
+    <!-- Conținut principal -->
+    <div class="col-md-9">
 
-
-
-<div class="container mt-5">
     <h2>Adaugă eveniment</h2>
     <?php if ($success): ?>
             <div class="alert alert-primary mt-4" id="dispari" role="alert">

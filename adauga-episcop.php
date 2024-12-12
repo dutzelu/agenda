@@ -1,5 +1,10 @@
 <?php
 include "conectaredb.php";
+session_start();
+if (!isset($_SESSION['user_id'])) {
+    header("Location: login.php"); // Redirecționare la login dacă utilizatorul nu este logat
+    exit;
+}
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $nume_complet_episcop = $_POST['nume_complet_episcop'];
@@ -23,26 +28,37 @@ include "header.php";
 
 <body>
 <div class="container mt-5">
-    <h2>Adăugare episcop</h2>
-    <form method="post" action="">
-        <div class="mb-3">
-            <label for="nume_complet_episcop" class="form-label">Nume complet episcop</label>
-            <input type="text" class="form-control" id="nume_complet_episcop" name="nume_complet_episcop" required>
+    <div class="row">
+        <!-- Bara laterală -->
+        <div class="col-md-3 g-5">
+
+             <?php include 'sidebar.php';?>
+
         </div>
-        <div class="mb-3">
-            <label for="nume_scurt_episcop" class="form-label">Nume scurt episcop</label>
-            <input type="text" class="form-control" id="nume_scurt_episcop" name="nume_scurt_episcop" required>
+
+        <!-- Conținut principal -->
+        <div class="col-md-9">
+            <h2 class="mb-3">Adăugare episcop</h2>
+            <form method="post" action="">
+                <div class="mb-3">
+                    <label for="nume_complet_episcop" class="form-label">Nume complet episcop</label>
+                    <input type="text" class="form-control" id="nume_complet_episcop" name="nume_complet_episcop" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nume_scurt_episcop" class="form-label">Nume scurt episcop</label>
+                    <input type="text" class="form-control" id="nume_scurt_episcop" name="nume_scurt_episcop" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nume_episcopie" class="form-label">Nume episcopie</label>
+                    <input type="text" class="form-control" id="nume_episcopie" name="nume_episcopie" required>
+                </div>
+                <div class="mb-3">
+                    <label for="nume_mitropolie" class="form-label">Nume mitropolie</label>
+                    <input type="text" class="form-control" id="nume_mitropolie" name="nume_mitropolie" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Trimite</button>
+            </form>
         </div>
-        <div class="mb-3">
-            <label for="nume_episcopie" class="form-label">Nume episcopie</label>
-            <input type="text" class="form-control" id="nume_episcopie" name="nume_episcopie" required>
-        </div>
-        <div class="mb-3">
-            <label for="nume_mitropolie" class="form-label">Nume mitropolie</label>
-            <input type="text" class="form-control" id="nume_mitropolie" name="nume_mitropolie" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Trimite</button>
-    </form>
 </div>
 
 <?php include 'footer.php'; ?>
