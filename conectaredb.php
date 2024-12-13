@@ -12,5 +12,11 @@ if ($conn->connect_error) {
     die("Conectare eșuată: " . $conn->connect_error);
 }
 
+// Setarea charset-ului conexiunii la UTF-8 $conn->set_charset("utf8");
+$conn->set_charset("utf8");
+
+// Definirea URL-ului de bază
+define('BASE_URL', 'https://localhost/agenda/');
+
 
 ?>
