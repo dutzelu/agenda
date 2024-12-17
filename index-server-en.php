@@ -284,7 +284,7 @@ $result_month = $stmt_month->get_result();
                         echo "<p class='zi_sapt'>{$data_formata} | $zi</p>";
                         echo "<ul>";
                         foreach ($events as $event) {
-                            echo '<li>' . date('H:i', strtotime($event["event_start"])) . ' - ' . date('H:i', strtotime($event["event_end"])) . ' - ' . htmlspecialchars($event["text_ro"]) . '</li>';
+                            echo '<li>' . date('H:i', strtotime($event["event_start"])) . ' - ' . date('H:i', strtotime($event["event_end"])) . ' - ' . htmlspecialchars($event["text_en"]) . '</li>';
                         }
                         echo "</ul>";
                     }

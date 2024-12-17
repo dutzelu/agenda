@@ -75,14 +75,14 @@
         color: white;
     }
 
-    a.btn-secondary:nth-child(2)  {
+    .agenda a.btn-secondary:nth-child(2)  {
         margin-left: -6px!important;
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
         border: none;
     }
 
-    a.btn-secondary:nth-child(1){
+    .agenda a.btn-secondary:nth-child(1){
         border: none;
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
@@ -90,14 +90,14 @@
 
 
 
-    a.btn-primary:nth-child(2){
+    .agenda a.btn-primary:nth-child(2){
         margin-left: -6px;
         border-top-left-radius: 0;
         border-bottom-left-radius: 0;
         border-left: 1px solid #fa6060;
     }
 
-    a.btn-primary:nth-child(1){
+    .agenda a.btn-primary:nth-child(1){
         border-top-right-radius: 0;
         border-bottom-right-radius: 0;
     }
@@ -110,6 +110,45 @@
             column-gap: 20px; /* Optional: spacing between columns */
             list-style: none;
     }
+
+
+    /* Calendar afisat gen Google */
+
+        .luna .day-number { font-weight: bold; margin-bottom: 5px; }
+        .luna .event {
+            font-size: 14px;
+        }
+        .luna .form-inline { justify-content: center; gap: 10px; }
+        .luna table.table td {
+            height: 100px;
+            width: 14.28%;
+            vertical-align: top;
+        }
+
+        .luna .event-even {
+            background-color:antiquewhite; /* Gri deschis */
+            color: #000;
+            padding: 2px 5px;
+            margin: 10px 0;
+            border-radius: 3px;
+        }
+
+        .luna .event-odd {
+            background-color: #e9ecef; /* Gri foarte deschis */
+            color: #333;
+            padding: 2px 5px;
+            margin: 2px 0;
+            border-radius: 3px;
+        }
+
+        .luna .bg-info.text-white .day-number {
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .luna .form-inline .form-group {
+            margin: 0 5px;
+        }
 
     /* Mobil */
 
