@@ -118,7 +118,7 @@ include 'header.php';
                             $start_formatted = $zile_saptamana[date('w', $start_date)] . ', ' . date('d', $start_date) . ' ' . $luni_an[date('n', $start_date) - 1] . ' ' . date('Y', $start_date);
                             $end_formatted = $zile_saptamana[date('w', $end_date)] . ', ' . date('d', $end_date) . ' ' . $luni_an[date('n', $end_date) - 1] . ' ' . date('Y', $end_date);
 
-                            echo '<tr>';
+                            echo '<tr onclick="window.location.href=\'edit-eveniment.php?id=' . $row["id"] . '\'" style="cursor:pointer;">';
                             echo '<td>' . $start_formatted . '</td>';
                             echo '<td>' . $end_formatted . '</td>';
                             echo '<td>' . htmlspecialchars($row["text_ro"]) . '</td>';
@@ -126,7 +126,7 @@ include 'header.php';
                             echo '<td>' . ($row["afiseaza_calendar"] ? 'Da' : 'Nu') . '</td>';
                             echo '<td>' . ($row["publicat"] ? 'Da' : 'Nu') . '</td>';
                             echo '<td>
-                            <a href="' . BASE_URL . 'del.php?id=' . $row["id"] . '" 
+                            <a href="del.php?id=' . $row["id"] . '" 
                                class="btn btn-danger btn-sm" 
                                onclick="return confirm(\'Ești sigur că vrei să ștergi acest eveniment?\');">
                                Șterge

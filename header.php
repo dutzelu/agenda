@@ -105,6 +105,12 @@
     .navig_agenda .col-md-6 {text-align:center!important;}
     .navig_agenda div.col-md-3:nth-child(3) {text-align:right;}
 
+   ul.zile-suplimentare {
+            column-count: 2; /* Divide the list into 2 columns */
+            column-gap: 20px; /* Optional: spacing between columns */
+            list-style: none;
+    }
+
     /* Mobil */
 
     @media only screen and (max-width: 600px) {
