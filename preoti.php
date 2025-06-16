@@ -7,7 +7,6 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-include 'header.php';
 
 /* ----------  helper general pt. bind_param  ---------- */
 function bindParams(mysqli_stmt $stmt, string $types, array $values): void
@@ -121,7 +120,7 @@ function urlWith(array $extra = []): string
     ];
     return 'preoti.php?' . http_build_query(array_merge($base, $extra));
 }
-include 'header.php'
+include 'header.php';
 ?>
 
 <body>
@@ -188,7 +187,7 @@ include 'header.php'
                     <?php if ($result->num_rows): $i = $offset + 1; ?>
                         <?php while ($row = $result->fetch_assoc()): ?>
                      <tr class="clickable-row"
-                                data-href="cleric.php?id=<?php echo $row['id']; ?>">
+                                data-href="edit-cleric.php?id=<?php echo $row['id']; ?>">
                                 <td><?php echo $i++; ?></td>
                                 <td><?php echo htmlspecialchars($row['nume']); ?></td>
                                 <td><?php echo htmlspecialchars($row['prenume']); ?></td>

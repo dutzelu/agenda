@@ -12,7 +12,6 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-include 'header.php';
 
 /* ----------  helper bind_param (array de referinţe) ---------- */
 function bindParams(mysqli_stmt $stmt, string $types, array $values): void

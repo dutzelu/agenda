@@ -24,7 +24,17 @@ margin: 0 5px;
     cursor: pointer;
 }
 
-tr.clickable-row{cursor:pointer}
+label {
+    background: aliceblue;
+    padding: 5px 10px;
+    font-weight:bold;
+}
+
+h1.tip_parohie {font-size:18px;}
+
+input, select {
+    border:1px solid #000!important;
+}
 
 .navig_agenda a.btn-primary, a.btn-secondary.active {
 background:#c20000;
@@ -102,7 +112,7 @@ ul.zile-suplimentare {
     column-gap: 20px; /* Optional: spacing between columns */
     list-style: none;
 }
-tr.clickable-row { cursor: pointer; }
+
 
 /* Calendar afisat gen Google */
 

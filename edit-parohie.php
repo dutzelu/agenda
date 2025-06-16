@@ -12,7 +12,27 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
-include 'header.php';
+/* ===================  ȘTERGE ASIGNARE  =================== */
+if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['del_cpr'])) {
+    $asign_id = (int)$_POST['del_cpr'];
+
+    /* ștergem doar dacă asignarea aparține acestei parohii */
+    $stmt_del = $conn->prepare(
+        "DELETE FROM clerici_parohii
+          WHERE id = ? AND parohie_id = ?"
+    );
+    $stmt_del->bind_param('ii', $asign_id, $parohie_id);
+    $stmt_del->execute();
+    $stmt_del->close();
+
+    header("Location: edit-parohie.php?id=$parohie_id&del=1");
+    exit;
+}
+
+if (isset($_GET['del'])) {
+    echo '<div class="alert alert-success" id="dispari">Asignarea a fost ștearsă.</div>';
+}
+
 
 /* ---------- 1. ID parohie din URL ---------- */
 $parohie_id = (isset($_GET['id']) && ctype_digit($_GET['id'])) ? (int)$_GET['id'] : 0;
@@ -37,7 +57,22 @@ $tari         = fetchLookup($conn, 'tari',          'id', 'denumire_ro');
 $tipuri       = fetchLookup($conn, 'tip_parohie',   'id', 'denumire_ro');
 $protopopiate = fetchLookup($conn, 'protopopiate',  'id', 'denumire_ro');
 $localitati   = fetchLookup($conn, 'localitati',    'id', 'denumire_en');  // simplificare
-$parohii_all  = fetchLookup($conn, 'parohii',       'id', 'denumire');     // pentru parohie-mamă
+
+// Parohii cu țară și localitate pentru dropdown parohie-mamă
+$parohii_all = [];
+$sql_par_mama = "
+    SELECT p.id, p.denumire, l.denumire_en AS localitate, t.denumire_ro AS tara
+    FROM parohii p
+    JOIN localitati l ON p.localitate_id = l.id
+    JOIN tari t ON p.tara_id = t.id
+    ORDER BY t.denumire_ro ASC, p.denumire ASC
+";
+$res_pm = $conn->query($sql_par_mama);
+while ($row = $res_pm->fetch_assoc()) {
+    $parohii_all[$row['id']] = '['.$row['tara'].'] '.$row['denumire'].' ('.$row['localitate'].')';
+}
+$res_pm->free();
+
 
 /* ---------- 4. Salvare (dacă POST) ---------- */
 $feedback = '';
@@ -134,16 +169,32 @@ $stmt_cl->execute();
 $res_clerici = $stmt_cl->get_result();
 $stmt_cl->close();
 
-
+ 
 
 $site = $parohie['website'];
 if ($site && !preg_match('#^https?://#i', $site)) $site = 'https://' . $site;
+
+$sql_clerici = "
+SELECT  cp.id            AS id_asign,   -- ★ aici
+        c.id             AS cleric_id,  -- util dacă vrei link spre cleric
+        c.nume,
+        c.prenume,
+        ra.denumire_ro   AS rang,
+        pp.denumire_ro   AS pozitie
+    FROM clerici_parohii cp
+    JOIN clerici            c  ON c.id  = cp.cleric_id
+    JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
+    JOIN pozitie_parohie    pp ON pp.id = cp.pozitie_parohie_id
+    WHERE cp.parohie_id = ?
+    AND (cp.data_sfarsit IS NULL OR cp.data_sfarsit >= CURDATE())
+    ORDER BY pp.id, c.nume, c.prenume";
+
 
 include 'header.php';
 ?>
  
 <body>
-<div class="container-fluid m-5 py-4">
+<div class="container m-5 py-4">
     <div class="row gx-4 gy-3">
         <!-- Sidebar -->
         <aside class="col-md-3 mb-4">
@@ -151,15 +202,33 @@ include 'header.php';
         </aside>
 
         <!-- Conţinut -->
-        <main class="col-md-9">
+        <main class="col-md-9 m-0">
             <?php
-            /* determină denumirea tipului (deja avem $tipuri[]) */
-            $tip_label = ucfirst($tipuri[$parohie['tip_parohie_id']]) ?? '';
-            ?>
-            <h1 class="mb-4">
-                <?= htmlspecialchars($tip_label.' "'.$parohie['denumire']) . '"'?>
-            </h1>
 
+            /* ------------ afișăm badge-ul colorat ------------ */
+       /* ------------ mapăm tip-id → culoare Bootstrap ------------ */
+        $badgeMap = [
+            1 => 'primary',      // catedrala arhiepiscopală
+            2 => 'secondary',    // paraclis arhiepiscopal
+            3 => 'danger',       // parohie
+            4 => 'warning',      // misiune
+            5 => 'success',      // mănăstire
+            6 => 'info',         // schit
+        ];
+
+        /* ------------ afișăm badge-ul colorat ------------ */
+        $tip_id    = (int)$parohie['tip_parohie_id'];
+        $tip_label = ucfirst($tipuri[$tip_id] ?? '');      // textul vizibil
+        $bgClass   = 'bg-'.($badgeMap[$tip_id] ?? 'dark'); // culoare; fallback „dark”
+
+        echo '<h1 class="tip_parohie mb-0 badge '.$bgClass.'">'.$tip_label.'</h1>';
+
+            ?>
+            <h2 class="mb-4 mt-0">
+                <?= htmlspecialchars($parohie['denumire']);?>
+            </h2>
+
+            <hr>
 
             <!-- =======================  CLERICII PAROHIEI  ====================== -->
             <h2 class="h5 mb-3">Clerici care slujesc aici</h2>
@@ -167,27 +236,46 @@ include 'header.php';
             <?php if ($res_clerici->num_rows): ?>
             <div class="table-responsive mb-4">
                 <table class="table table-sm table-striped align-middle">
-                    <thead class="table-dark">
+                    
+                <thead class="table-dark">
+                    <tr>
+                        <th>Nume</th>
+                        <th>Rang</th>
+                        <th>Pozitie</th>
+                        <th class="text-center">Acțiuni</th>
+                    </tr>
+                </thead>
+                
+                <tbody>
+                <?php if ($res_clerici->num_rows): ?>
+                    <?php while ($cl = $res_clerici->fetch_assoc()): ?>
                         <tr>
-                            <th>Nume</th>
-                            <th>Rang</th>
-                            <th>Pozitie</th>
+                            <td>
+                                <a href="cleric.php?id=<?= $cl['id'] ?>">
+                                    <?= htmlspecialchars($cl['nume'].' '.$cl['prenume']) ?>
+                                </a>
+                            </td>
+                            <td><?= htmlspecialchars($cl['rang']) ?></td>
+                            <td><?= htmlspecialchars($cl['pozitie']) ?></td>
+
+                            <!-- Buton Șterge -->
+                            <td class="text-center">
+                                <form method="post" class="d-inline"
+                                    onsubmit="return confirm('Ștergi această asignare?');">
+                                    <input type="hidden" name="del_cpr"
+       value="<?= $cl['id_asign'] ?>">
+                                    <button class="btn btn-sm btn-danger">
+                                        Șterge
+                                    </button>
+                                </form>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        <?php while ($cl = $res_clerici->fetch_assoc()): ?>
-                            <tr>
-                                <td>
-                                    <a href="cleric.php?id=<?= $cl['id']; ?>"
-                                    class="text-decoration-none">
-                                    <?= htmlspecialchars($cl['nume'].' '.$cl['prenume']); ?>
-                                    </a>
-                                </td>
-                                <td><?= htmlspecialchars($cl['rang']);    ?></td>
-                                <td><?= htmlspecialchars($cl['pozitie']); ?></td>
-                            </tr>
-                        <?php endwhile; ?>
-                    </tbody>
+                    <?php endwhile; ?>
+                <?php else: ?>
+                    <tr><td colspan="4" class="text-center">Nu există clerici.</td></tr>
+                <?php endif; ?>
+                </tbody>
+
                 </table>
             </div>
             <?php else: ?>
