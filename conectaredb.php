@@ -16,7 +16,9 @@ if ($conn->connect_error) {
 $conn->set_charset("utf8");
 
 // Definirea URL-ului de bază
-define('BASE_URL', 'https://localhost/agenda/');
+define("BASE_URL", "http://localhost/agenda/");
+define("ROOT_PATH", $_SERVER["DOCUMENT_ROOT"] . "/agenda");
+
 
 
 ?>

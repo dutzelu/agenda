@@ -22,9 +22,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // Extragem câmpurile pentru evenimentul curent
             $original_event_start = $event_data['event_start'];
             $original_event_end = $event_data['event_end'];
-            $text_ro = $event_data['text_ro'];
-            $text_en = $event_data['text_en'];
-
+            $text_ro = $conn->real_escape_string($event_data['text_ro']);
+            $text_en = $conn->real_escape_string($event_data['text_en']);
+            
             // Conversie la format MySQL
             $event_start_dt = strtotime($original_event_start);
             $event_end_dt = strtotime($original_event_end);

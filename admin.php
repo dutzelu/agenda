@@ -70,7 +70,7 @@ include 'header.php';
 ?>
 
 <body>
-<div class="container mt-5">
+<div class="container">
     <div class="row">
         <!-- Bara laterală -->
         <div class="col-md-3 g-5">
@@ -143,17 +143,64 @@ include 'header.php';
             </table>
 
             <!-- Paginare -->
-            <nav>
-                <ul class="pagination">
-                    <?php for ($i = 1; $i <= $total_pages; $i++): ?>
+            <nav aria-label="Navigation" class="mt-5 mb-5">
+                <ul class="pagination mb-0">
+
+                    <?php
+                    /* Config */
+                    $max_links   = 10;                          // câte numere vrei să apară
+                    $half_window = floor($max_links / 2);
+
+                    /* Calculează fereastra de pagini */
+                    $start = max(1, $page - $half_window);
+                    $end   = min($total_pages, $start + $max_links - 1);
+                    // Dacă suntem la începutul listei şi nu avem 10 numere, deplasăm fereastra la dreapta
+                    if (($end - $start + 1) < $max_links) {
+                        $start = max(1, $end - $max_links + 1);
+                    }
+
+                    /* Helper pentru linkuri */
+                    function pageUrl($p, $year) {
+                        return "admin.php?page={$p}&year={$year}";
+                    }
+                    ?>
+
+                    <!-- Prima / Înapoi -->
+                    <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo pageUrl(1, $selected_year); ?>" aria-label="First">
+                            &laquo;<!-- « -->
+                        </a>
+                    </li>
+                    <li class="page-item <?php echo ($page == 1) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo pageUrl(max(1, $page - 1), $selected_year); ?>" aria-label="Previous">
+                            &lsaquo;<!-- ‹ -->
+                        </a>
+                    </li>
+
+                    <!-- Numere dinamic -->
+                    <?php for ($i = $start; $i <= $end; $i++): ?>
                         <li class="page-item <?php echo ($i == $page) ? 'active' : ''; ?>">
-                            <a class="page-link" href="admin.php?page=<?php echo $i; ?>&year=<?php echo $selected_year; ?>">
+                            <a class="page-link" href="<?php echo pageUrl($i, $selected_year); ?>">
                                 <?php echo $i; ?>
                             </a>
                         </li>
                     <?php endfor; ?>
+
+                    <!-- Înainte / Ultima -->
+                    <li class="page-item <?php echo ($page == $total_pages) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo pageUrl(min($total_pages, $page + 1), $selected_year); ?>" aria-label="Next">
+                            &rsaquo;<!-- › -->
+                        </a>
+                    </li>
+                    <li class="page-item <?php echo ($page == $total_pages) ? 'disabled' : ''; ?>">
+                        <a class="page-link" href="<?php echo pageUrl($total_pages, $selected_year); ?>" aria-label="Last">
+                            &raquo;<!-- » -->
+                        </a>
+                    </li>
+
                 </ul>
-            </nav>
+</nav>
+
         </div>
     </div>
 </div>
