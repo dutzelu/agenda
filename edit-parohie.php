@@ -12,6 +12,14 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+/* ---------- 1. ID parohie din URL ---------- */
+$parohie_id = (isset($_GET['id']) && ctype_digit($_GET['id'])) ? (int)$_GET['id'] : 0;
+if ($parohie_id === 0) {
+    echo '<div class="container py-5"><h3>ID parohie invalid.</h3></div>';
+    include 'footer.php';
+    exit;
+}
+
 /* ===================  ȘTERGE ASIGNARE  =================== */
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['del_cpr'])) {
     $asign_id = (int)$_POST['del_cpr'];
@@ -33,14 +41,6 @@ if (isset($_GET['del'])) {
     echo '<div class="alert alert-success" id="dispari">Asignarea a fost ștearsă.</div>';
 }
 
-
-/* ---------- 1. ID parohie din URL ---------- */
-$parohie_id = (isset($_GET['id']) && ctype_digit($_GET['id'])) ? (int)$_GET['id'] : 0;
-if ($parohie_id === 0) {
-    echo '<div class="container py-5"><h3>ID parohie invalid.</h3></div>';
-    include 'footer.php';
-    exit;
-}
 
 /* ---------- 2. Funcție simplă pentru lookup ---------- */
 function fetchLookup(mysqli $conn, string $table, string $idCol, string $nameCol): array
@@ -149,19 +149,24 @@ if (!$parohie) {
 /* pregăteşte website-ul pt. afișare (prefix după caz) */
 
 /* ---------- 6. Clericii care slujesc în această parohie ---------- */
-$sql_clerici = "
-    SELECT  c.id,
-            c.nume,
-            c.prenume,
-            ra.denumire_ro AS rang,
-            pp.denumire_ro AS pozitie
-      FROM clerici_parohii cp
-      JOIN clerici          c  ON c.id  = cp.cleric_id
-      JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
-      JOIN pozitie_parohie  pp ON pp.id = cp.pozitie_parohie_id
+ $sql_clerici = "
+
+SELECT
+cp.id AS id_asign,          -- adăugat
+c.id  AS cleric_id,         -- opțional, dacă mai ai nevoie şi de id-ul clericului
+         c.nume,
+         c.prenume,
+         ra.denumire_ro AS rang,
+         pp.denumire_ro AS pozitie
+     FROM clerici_parohii cp
+     JOIN clerici c  ON c.id = cp.cleric_id
+     JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
+     JOIN pozitie_parohie pp ON pp.id = cp.pozitie_parohie_id
      WHERE cp.parohie_id = ?
        AND (cp.data_sfarsit IS NULL OR cp.data_sfarsit >= CURDATE())
-     ORDER BY pp.id, c.nume, c.prenume";
+     ORDER BY pp.id, c.nume, c.prenume
+ ";
+
 
 $stmt_cl = $conn->prepare($sql_clerici);
 $stmt_cl->bind_param('i', $parohie_id);
@@ -173,28 +178,13 @@ $stmt_cl->close();
 
 $site = $parohie['website'];
 if ($site && !preg_match('#^https?://#i', $site)) $site = 'https://' . $site;
-
-$sql_clerici = "
-SELECT  cp.id            AS id_asign,   -- ★ aici
-        c.id             AS cleric_id,  -- util dacă vrei link spre cleric
-        c.nume,
-        c.prenume,
-        ra.denumire_ro   AS rang,
-        pp.denumire_ro   AS pozitie
-    FROM clerici_parohii cp
-    JOIN clerici            c  ON c.id  = cp.cleric_id
-    JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
-    JOIN pozitie_parohie    pp ON pp.id = cp.pozitie_parohie_id
-    WHERE cp.parohie_id = ?
-    AND (cp.data_sfarsit IS NULL OR cp.data_sfarsit >= CURDATE())
-    ORDER BY pp.id, c.nume, c.prenume";
-
+ 
 
 include 'header.php';
 ?>
  
 <body>
-<div class="container m-5 py-4">
+<div class="container ">
     <div class="row gx-4 gy-3">
         <!-- Sidebar -->
         <aside class="col-md-3 mb-4">
@@ -251,7 +241,7 @@ include 'header.php';
                     <?php while ($cl = $res_clerici->fetch_assoc()): ?>
                         <tr>
                             <td>
-                                <a href="cleric.php?id=<?= $cl['id'] ?>">
+                                <a href="edit-cleric.php?id=<?= htmlspecialchars($cl['cleric_id']) ?>">
                                     <?= htmlspecialchars($cl['nume'].' '.$cl['prenume']) ?>
                                 </a>
                             </td>
@@ -262,8 +252,7 @@ include 'header.php';
                             <td class="text-center">
                                 <form method="post" class="d-inline"
                                     onsubmit="return confirm('Ștergi această asignare?');">
-                                    <input type="hidden" name="del_cpr"
-       value="<?= $cl['id_asign'] ?>">
+                                    <input type="hidden" name="del_cpr" value="<?= $cl['id_asign'] ?>">
                                     <button class="btn btn-sm btn-danger">
                                         Șterge
                                     </button>

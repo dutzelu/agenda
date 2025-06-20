@@ -97,7 +97,7 @@ include 'header.php';
 
 
 <body>
-<div class="container py-4">
+<div class="container ">
     <div class="row gx-4">
         <!-- sidebar -->
         <aside class="col-md-3 mb-4"><?php include 'sidebar.php'; ?></aside>

@@ -1,9 +1,4 @@
 <?php
-/*  ============================================================
-    edit-cleric.php – fișa de editare a unui cleric
-    PHP 8.2 • Bootstrap 5
-    ============================================================ */
-
 include 'conectaredb.php';
 
 session_start();
@@ -12,14 +7,25 @@ if (!isset($_SESSION['user_id'])) {
     exit;
 }
 
+
+$parohie_id = $_POST['parohie_id'] ?? '';
+
 /* ---------- 1. ID din URL ---------- */
 $cleric_id = isset($_GET['id']) && ctype_digit($_GET['id']) ? (int)$_GET['id'] : 0;
 if (!$cleric_id) { die('<h3>Cleric inexistent.</h3>'); }
+
+
+
+
 
 /* ---------- 2. RANGURI (dropdown) ---------- */
 $ranguri = [];
 $res = $conn->query("SELECT id, denumire_ro FROM rang_administrativ ORDER BY id");
 while ($row = $res->fetch_assoc()) $ranguri[$row['id']] = $row['denumire_ro'];
+
+
+
+
 $res->free();
 
 /* ---------- 3. SALVARE DATE CLERIC ---------- */
@@ -45,6 +51,9 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['save_c'])) {
     exit;
 }
 
+
+
+
 /* ---------- 4. DATE CLERIC ---------- */
 $stmt = $conn->prepare(
     "SELECT c.*, ra.denumire_ro AS rang_ro
@@ -58,7 +67,28 @@ $cleric = $stmt->get_result()->fetch_assoc();
 $stmt->close();
 if (!$cleric) { die('<h3>Cleric inexistent.</h3>'); }
 
+/* ---------- 4b. ȘTERGERE ASIGNARE ---------- */
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['del_cpr_id'])) {
+    $del_id = (int)$_POST['del_cpr_id'];
+
+    $del = $conn->prepare(
+        "DELETE FROM clerici_parohii
+          WHERE id = ?           /* id-ul relației */
+            AND cleric_id = ?    /* siguranță: aparține chiar acestui cleric */
+        LIMIT 1"
+    );
+    $del->bind_param('ii', $del_id, $cleric_id);
+    $del->execute();
+    $del->close();
+
+    header("Location: edit-cleric.php?id=$cleric_id"); /* refresh */
+    exit;
+}
+
+
+
 /* ---------- 5. LISTĂ PAROHII ACTIVE ---------- */
+
 $sql = "SELECT cp.id, p.id AS parohie_id, p.denumire,
                l.denumire_en AS localitate, t.denumire_ro AS tara,
                pp.denumire_ro AS pozitie,
@@ -75,16 +105,45 @@ $stmt->bind_param('i', $cleric_id);
 $stmt->execute();
 $res_par = $stmt->get_result();
 
-/* ---------- 6. LOOK-UP pentru FORMULAR ASIGNARE ---------- */
-function lookup(mysqli $c, string $tbl, string $n) {
-    $out=[]; $r=$c->query("SELECT id,$n FROM $tbl ORDER BY $n");
-    while($row=$r->fetch_assoc()) $out[$row['id']]=$row[$n];
-    $r->free(); return $out;
+
+
+/* ---------- 6. PAROHII PENTRU DROPDOWN ---------- */
+$parohii = [];
+
+$sql = "SELECT p.id,
+               CONCAT('[', t.denumire_ro, '] ', p.denumire,
+                      ' (', l.denumire_en, ')') AS eticheta
+        FROM parohii p
+        JOIN tari       t ON t.id = p.tara_id
+        JOIN localitati l ON l.id = p.localitate_id
+        ORDER BY t.denumire_ro, p.denumire";
+
+$res = $conn->query($sql);
+while ($row = $res->fetch_assoc()) {
+    $parohii[$row['id']] = $row['eticheta'];
 }
-$parohii = lookup($conn,'parohii','denumire');
+$res->free();
+
+/* ---------- UTILITAR LOOKUP (folosit la poziții) ---------- */
+if (!function_exists('lookup')) {
+    function lookup(mysqli $c, string $tbl, string $n) {
+        $out = [];
+        $r   = $c->query("SELECT id, $n FROM $tbl ORDER BY $n");
+        while ($row = $r->fetch_assoc()) {
+            $out[$row['id']] = $row[$n];
+        }
+        $r->free();
+        return $out;
+    }
+}
+
+
+/* pozitiile rămân la fel */
 $pozitii = lookup($conn,'pozitie_parohie','denumire_ro');
 
+
 /* ---------- 7. ADĂUGARE ASIGNARE ---------- */
+
 if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['add_cpr'])) {
     $parohie_id   = (int)$_POST['parohie_id'];
     $pozitie_id   = (int)$_POST['pozitie_id'];
@@ -111,7 +170,7 @@ if ($_SERVER['REQUEST_METHOD']==='POST' && isset($_POST['add_cpr'])) {
         $ins->execute(); $ins->close();
     }
     $chk->close();
-    header("Location: cleric.php?id=$cleric_id");
+    header("Location: edit-cleric.php?id=$cleric_id");
     exit;
 }
 
@@ -119,7 +178,7 @@ include 'header.php';
 ?>
 
 <body>
-<div class="container py-4">
+<div class="container ">
     <div class="row gx-4">
         <aside class="col-md-3 mb-4"><?php include 'sidebar.php'; ?></aside>
 
@@ -180,12 +239,16 @@ include 'header.php';
             </form>
 
             <!-- LISTĂ PAROHII -->
-            <h2 class="h5 mb-3">Parohii / Misiuni</h2>
+            <h2 class="h5 mb-3">Parohii / Misiuni unde slujește</h2>
             <div class="table-responsive">
                 <table class="table table-striped table-sm align-middle">
                     <thead class="table-dark">
                         <tr>
-                            <th>Parohie</th><th>Pozitie</th><th>Start</th><th>Sfârșit</th>
+                            <th>Parohie</th>
+                            <th>Pozitie</th>
+                            <th>Start</th>
+                            <th>Sfârșit</th>
+                            <th class="text-center" style="width:80px;">&nbsp;</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -195,12 +258,22 @@ include 'header.php';
                                 <td>
                                     <a href="edit-parohie.php?id=<?= $row['parohie_id'] ?>">
                                         [<?= $row['tara'] ?>] <?= htmlspecialchars($row['denumire']) ?>
-                                        (<?= $row['localitate'] ?>)
+                                        | <span class="text-danger"><?= $row['localitate'] ?></span>
                                     </a>
                                 </td>
                                 <td><?= htmlspecialchars($row['pozitie']) ?></td>
                                 <td><?= $row['data_start'] ?: '—' ?></td>
                                 <td><?= $row['data_sfarsit']?: '—' ?></td>
+                                <td class="text-center">
+                                    <form method="post" onsubmit="return confirm('Ștergi această asignare?');" class="d-inline">
+                                        <input type="hidden" name="del_cpr_id" value="<?= $row['id'] ?>">
+                                        <button class="btn btn-sm btn-danger" title="Șterge">
+                                            Șterge
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
@@ -216,14 +289,23 @@ include 'header.php';
                 <input type="hidden" name="add_cpr" value="1">
 
                 <div class="col-md-5">
-                    <label class="form-label">Parohie</label>
-                    <select name="parohie_id" class="form-select" required>
-                        <option value="" disabled selected>— selectează —</option>
-                        <?php foreach ($parohii as $pid=>$den): ?>
-                            <option value="<?= $pid ?>"><?= htmlspecialchars($den) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+                <label class="form-label">Parohie</label>
+                <select
+                    name="parohie_id"
+                    class="selectpicker form-select"
+                    data-live-search="true"
+                    title="— selectează parohia —"
+                    required
+                >
+                    <?php foreach ($parohii as $pid => $den): ?>
+                    <option value="<?= $pid ?>" 
+                        <?= $pid == $parohie_id ? 'selected' : '' ?>>
+                        <?= htmlspecialchars($den) ?>
+                    </option>
+                    <?php endforeach; ?>
+                </select>
                 </div>
+
 
                 <div class="col-md-3">
                     <label class="form-label">Poziție</label>
@@ -254,7 +336,12 @@ include 'header.php';
 <?php include 'footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-setTimeout(()=>{const el=document.getElementById('dispari');if(el)el.style.display='none';},2000);
+    setTimeout(()=>{const el=document.getElementById('dispari');if(el)el.style.display='none';},2000);
+
+    $(document).ready(function(){
+        $('.selectpicker').selectpicker();
+    });
+
 </script>
 </body>
 </html>
