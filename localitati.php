@@ -4,6 +4,25 @@ include 'conectaredb.php';
 session_start();
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
+}
+
+
+/* ---------- ştergere directă dacă există ?del=id ---------- */
+if (isset($_GET['del']) && ctype_digit($_GET['del'])) {
+    $delId   = (int)$_GET['del'];
+
+    $stmtDel = $conn->prepare("DELETE FROM localitati WHERE id = ?");
+    $stmtDel->bind_param('i', $delId);
+
+    if ($stmtDel->execute() && $stmtDel->affected_rows) {
+        $msg = rawurlencode('Localitatea a fost ștearsă cu succes.');
+    } else {
+        // cel mai frecvent motiv de eşec este o parohie care referenţiază localitatea
+        $msg = rawurlencode('Localitatea nu poate fi ștearsă (există parohii asociate).');
+    }
+    $stmtDel->close();
+
+    header("Location: localitati.php?msg={$msg}");
     exit;
 }
 
@@ -36,6 +55,7 @@ include 'header.php'; ?>
                 </div>
             <?php endif; ?>
 
+
             <div class="table-responsive">
                 <table id="tLocalitati" class="table table-striped table-hover align-middle">
                     <thead class="table-dark">
@@ -55,8 +75,8 @@ include 'header.php'; ?>
                             <td><?= htmlspecialchars($row['denumire_ro']) ?></td>
                             <td><?= htmlspecialchars($row['tara']) ?></td>
                             <td class="text-end">
-                                <a href="edit-localitate.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-secondary">Editează</a>
-                                <a href="delete-localitate.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sigur ștergeți localitatea?');">Șterge</a>
+                                <a href="edit-localitate.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Editează"><i class="bi bi-pencil"></i></a>
+                                <a href="localitati.php?del=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" title="Șterge" onclick="return confirm('Sigur doriți să ștergeți localitatea?');"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -71,6 +91,7 @@ include 'header.php'; ?>
 
 <!-- DataTables CDN (Bootstrap 5 integration) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>

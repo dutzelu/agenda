@@ -5,6 +5,25 @@ margin:2%;
 a {
     text-decoration: none;
 }
+
+#parohii > ol > li {
+  color: #3669b3;
+  font-size: 22px;
+  font-weight: 300 !important;
+  background: url('/agenda/assets/images/russian-orthodox-church.png') no-repeat left center;
+  width: fit-content;
+  padding-left: 36px;
+}
+
+#parohii ul li::marker, #manastiri ul li::marker {
+  color: red;
+
+}
+
+#parohii p {
+    margin:0;
+}
+
 .agenda ul {
 
 margin:0;
@@ -93,7 +112,9 @@ border-top-right-radius: 0;
 border-bottom-right-radius: 0;
 }
 
-
+tr.clickable-row > td {
+	text-transform:capitalize;
+}
 
 .agenda a.btn-primary:nth-child(2){
 margin-left: -6px;

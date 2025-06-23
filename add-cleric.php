@@ -1,6 +1,6 @@
 <?php
 /* ============================================================
-   add-preot.php  –  adăugare cleric (preot / diacon / etc.)
+   add-cleric.php  –  adăugare cleric (preot / diacon / etc.)
    Compatibil PHP 8.2 • Bootstrap 5
 ============================================================ */
 

@@ -1,9 +1,5 @@
 <?php
-/*  parohii.php  ----------------------------------------------------------
-    Listă parohii + filtre + căutare + paginaţie        PHP 8.2 compatible
--------------------------------------------------------------------------- */
 
-/* ----------  autentificare + header  ---------- */
 include 'conectaredb.php';
 
 session_start();
@@ -24,7 +20,7 @@ function bindParams(mysqli_stmt $stmt, string $types, array $values): void
 
 /* ----------  config + input ---------- */
 $per_page = 20;
-$valid_types = ['all','parohie','misiune','manastire','catedrala','schit'];
+$valid_types = ['all','parohie','misiune','filie','manastire','catedrala arhiepiscopala', 'paraclis arhiepiscopal', 'schit'];
 
 $page   = (isset($_GET['page']) && ctype_digit($_GET['page'])) ? (int)$_GET['page'] : 1;
 $search = trim($_GET['q'] ?? '');
@@ -45,11 +41,17 @@ switch ($type) {
     case 'misiune':
         $where[] = "tp.denumire_ro = 'misiune'";
         break;
+    case 'filie':
+        $where[] = "tp.denumire_ro = 'filie'";
+        break;
     case 'manastire':
         $where[] = "tp.denumire_ro = 'mănăstire'";
         break;
-    case 'catedrala':
-        $where[] = "tp.denumire_ro IN ('catedrala_arhiespicopala', 'paraclis_arhiepiscopal')";
+     case 'catedrala arhiepiscopala':
+        $where[] = "tp.denumire_ro = 'catedrala arhiepiscopala'";
+        break;
+     case 'paraclis arhiepiscopal':
+        $where[] = "tp.denumire_ro = 'paraclis arhiepiscopal'";
         break;
     case 'schit':
         $where[] = "tp.denumire_ro = 'schit'";
@@ -80,6 +82,20 @@ $total_rows = ($stmt_cnt->get_result()->fetch_assoc()['total']) ?? 0;
 $stmt_cnt->close();
 
 $total_pages = max(1, (int)ceil($total_rows / $per_page));
+
+    /* ----------  număr parohii pe tip (pentru filtre) ---------- */
+    $sql_type_counts = "SELECT
+            COUNT(*) AS all_cnt,
+            SUM(tp.denumire_ro = 'parohie') AS parohie_cnt,
+            SUM(tp.denumire_ro = 'misiune') AS misiune_cnt,
+            SUM(tp.denumire_ro = 'filie')   AS filie_cnt,
+            SUM(tp.denumire_ro = 'mănăstire') AS manastire_cnt,
+            SUM(tp.denumire_ro = 'catedrala arhiepiscopala') AS catedrala_cnt,
+            SUM(tp.denumire_ro = 'paraclis arhiepiscopal') AS paraclis_cnt,
+            SUM(tp.denumire_ro = 'schit')  AS schit_cnt
+        FROM parohii p
+        JOIN tip_parohie tp ON tp.id = p.tip_parohie_id";
+    $type_counts = $conn->query($sql_type_counts)->fetch_assoc() ?: [];
 
 /* ----------  select data ---------- */
 $sql_data = "SELECT p.id,
@@ -117,6 +133,30 @@ function urlWith(array $extra = []): string
     ];
     return 'parohii.php?' . http_build_query(array_merge($base, $extra));
 }
+
+
+/* --------------  ștergere parohie -------------- */
+if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
+    $del_id = (int)$_GET['delete'];
+
+    // 1. Ștergem clericii alocați la parohie (dacă nu ai ON DELETE CASCADE)
+    $stmt = $conn->prepare("DELETE FROM clerici_parohii WHERE parohie_id = ?");
+    $stmt->bind_param('i', $del_id);
+    $stmt->execute();
+    $stmt->close();
+
+    // 2. Ștergem însăși parohia
+    $stmt = $conn->prepare("DELETE FROM parohii WHERE id = ?");
+    $stmt->bind_param('i', $del_id);
+    $stmt->execute();
+    $stmt->close();
+
+    // 3. Redirect ca să evităm re-submit și să păstrăm eventualele filtre
+    header('Location: ' . urlWith([]));   // sau urlWith(['search'=>$search]) etc.
+    exit;
+}
+
+
 include "header.php";
 ?>
  
@@ -133,26 +173,39 @@ include "header.php";
 
             <h1 class="mb-4">Parohii</h1>
 
-            <!-- filtre rapide pe tip -->
-            <div class="mb-3">
-            <?php
-            $labels = [
-                'all'       => 'Toate',
-                'parohie'   => 'Parohii',
-                'misiune'   => 'Misiuni',
-                'manastire' => 'Mănăstiri',
-                'catedrala' => 'Catedrale & Paraclise',
-                'schit'     => 'Schituri'
-            ];
-            foreach ($labels as $key=>$label):
-                $btn = ($type === $key) ? 'btn-primary' : 'btn-outline-primary';
-            ?>
-                <a class="btn <?php echo $btn; ?> me-1 mb-1"
-                   href="<?php echo urlWith(['type'=>$key,'page'=>1]); ?>">
-                   <?php echo $label; ?>
-                </a>
-            <?php endforeach; ?>
-            </div>
+            
+<!-- filtre rapide pe tip -->
+<div class="mb-3">
+<?php
+$labels = [
+    'all'       => 'Toate',
+    'parohie'   => 'Parohii',
+    'misiune'   => 'Misiuni',
+    'filie'     => 'Filii',
+    'manastire' => 'Mănăstiri',
+    'catedrala arhiepiscopala' => 'Catedrale',
+    'paraclis arhiepiscopal' => 'Paraclise',
+    'schit'     => 'Schituri'
+];
+$count_map = [
+    'all'       => $type_counts['all_cnt']       ?? 0,
+    'parohie'   => $type_counts['parohie_cnt']   ?? 0,
+    'misiune'   => $type_counts['misiune_cnt']   ?? 0,
+    'filie'     => $type_counts['filie_cnt']     ?? 0,
+    'manastire' => $type_counts['manastire_cnt'] ?? 0,
+    'catedrala arhiepiscopala' => $type_counts['catedrala_cnt'] ?? 0,
+    'paraclis arhiepiscopal' => $type_counts['paraclis_cnt'] ?? 0,
+    'schit'     => $type_counts['schit_cnt']     ?? 0
+];
+foreach ($labels as $key=>$label):
+?>
+    <a class="me-1 mb-1"
+       href="<?php echo urlWith(['type'=>$key,'page'=>1]); ?>">
+       <?php echo $label . ' (' . ($count_map[$key] ?? 0) . ')'; ?>
+    </a>
+<?php endforeach; ?>
+</div>
+
 
             <!-- căutare -->
             <form class="row row-cols-lg-auto g-3 align-items-center mb-4" method="get" action="parohii.php">
@@ -173,15 +226,13 @@ include "header.php";
             <!-- tabel -->
             <div class="table-responsive">
                 <table class="table table-striped table-hover align-middle">
-                    <thead class="table-dark">
+                    <thead class="table">
                         <tr>
                             <th>#</th>
-                            <th>Denumire</th>
-                            <th>Localitate</th>
-                            <th>Țară</th>
-                            <th>Tip</th>
+                            <th>Nume</th>
+                            <th>Adresa</th>
                             <th>Protopopiat</th>
-                            <th>Website</th>
+                            <th class="text-center">Acțiuni</th>  <!-- NOU -->
                         </tr>
                     </thead>
                     <tbody>
@@ -190,20 +241,28 @@ include "header.php";
                                 <tr class="clickable-row"
                                         data-href="edit-parohie.php?id=<?php echo $row['id']; ?>">
                                 <td><?php echo $i++; ?></td>
+                                <td><?php echo htmlspecialchars($row['tip']); ?></td>
                                 <td><?php echo htmlspecialchars($row['denumire']); ?></td>
                                 <td><?php echo htmlspecialchars($row['localitate']); ?></td>
                                 <td><?php echo htmlspecialchars($row['tara']); ?></td>
-                                <td><?php echo htmlspecialchars($row['tip']); ?></td>
                                 <td><?php echo htmlspecialchars($row['protopopiat'] ?: '—'); ?></td>
                                 <td>
                                   <?php if ($row['website']): ?>
                                      <a href="<?php echo htmlspecialchars($row['website']); ?>" target="_blank">Link</a>
                                   <?php else: echo '—'; endif; ?>
                                 </td>
+                                <td class="text-center text-nowrap">
+                                    <a href="parohii.php?<?php echo http_build_query(array_merge($_GET, ['delete'=>$row['id']])); ?>"
+                                    class="btn btn-sm btn-outline-danger"
+                                    title="Șterge"
+                                    onclick="return confirm('Ești sigur că vrei să ștergi această parohie?');">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </td>
                             </tr>
                         <?php endwhile; ?>
                     <?php else: ?>
-                        <tr><td colspan="7" class="text-center">Nu s-au găsit parohii.</td></tr>
+                        <tr><td colspan="5" class="text-center">Nu s-au găsit parohii.</td></tr>
                     <?php endif; ?>
                     </tbody>
                 </table>

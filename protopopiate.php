@@ -7,6 +7,20 @@
 include 'conectaredb.php';
 
 session_start();
+
+/* ---------- ștergere directă dacă există ?del=id ---------- */
+if (isset($_GET['del']) && ctype_digit($_GET['del'])) {
+    $delId = (int)$_GET['del'];
+    // verificăm dacă există
+    $stmtDel = $conn->prepare("DELETE FROM protopopiate WHERE id=?");
+    $stmtDel->bind_param('i', $delId);
+    $stmtDel->execute();
+    $stmtDel->close();
+    $_SESSION['flash'] = 'Protopopiat șters cu succes.';
+    header('Location: protopopiate.php');
+    exit;
+}
+
 if (!isset($_SESSION['user_id'])) {
     header('Location: login.php');
     exit;
@@ -34,6 +48,14 @@ $rez = $conn->query($sql);
         <main class="col-md-9">
             <div class="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap pt-3 mb-3">
                 <h1 class="h2 mb-0">Protopopiate</h1>
+
+<?php if (!empty($_SESSION['flash'])): ?>
+    <div id="flash-msg" class="alert alert-success alert-dismissible fade show" role="alert">
+        <?= $_SESSION['flash']; unset($_SESSION['flash']); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+<?php endif; ?>
+
                 <a href="add-protopopiat.php" class="btn btn-primary">Adaugă protopopiat</a>
             </div>
 
@@ -64,8 +86,8 @@ $rez = $conn->query($sql);
                             <td><?= htmlspecialchars($row['tara']) ?></td>
                             <td><?= $row['protopop'] ? htmlspecialchars($row['protopop']) : '—' ?></td>
                             <td class="text-end">
-                                <a href="edit-protopopiat.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-secondary">Editează</a>
-                                <a href="delete-protopopiat.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Sigur ștergeți protopopiatul?');">Șterge</a>
+<a href="edit-protopopiat.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-outline-secondary" title="Editează"><i class="bi bi-pencil"></i></a>
+<a href="protopopiate.php?del=<?= $row['id'] ?>" class="btn btn-sm btn-outline-danger" title="Șterge" onclick="return confirm('Sigur doriți să ștergeți protopopiatul?');"><i class="bi bi-trash"></i></a>
                             </td>
                         </tr>
                     <?php endwhile; ?>
@@ -80,6 +102,7 @@ $rez = $conn->query($sql);
 
 <!-- DataTables CDN (Bootstrap 5 integration) -->
 <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
 <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
 <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
 <script>

@@ -80,6 +80,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_parohie'])) {
 
     /* a) Citire & sanitaizare */
     $denumire       = trim($_POST['denumire']);
+    $denumire_en    = trim($_POST['denumire_en'] ?? '');
     $tara_id        = (int)$_POST['tara_id'];
     $localitate_id  = (int)$_POST['localitate_id'];
     $tip_id         = (int)$_POST['tip_id'];
@@ -98,17 +99,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_parohie'])) {
 
     /* b) Update */
     $sql = "UPDATE parohii SET
-                denumire = ?, tara_id = ?, localitate_id = ?,
+                denumire = ?, denumire_en =?, tara_id = ?, localitate_id = ?,
                 tip_parohie_id = ?, protopopiat_id = ?,
                 parohie_mama_id = ?, hram_ro = ?, hram_en = ?,
                 adresa = ?, website = ?, email = ?
             WHERE id = ?";
 
     $stmt = $conn->prepare($sql);
-    /* tipuri: s  i  i  i  i  i  s  s  s  s  s  i */
     $stmt->bind_param(
-        'siiiiisssssi',
+        'ssiiiiisssssi',
         $denumire,
+        $denumire_en,
         $tara_id,
         $localitate_id,
         $tip_id,
@@ -280,9 +281,15 @@ include 'header.php';
             <form method="post" class="row g-3">
 
                 <div class="col-12">
-                    <label class="form-label">Denumire</label>
+                    <label class="form-label">Denumire (RO)</label>
                     <input type="text" name="denumire" class="form-control" required
                            value="<?= htmlspecialchars($parohie['denumire']) ?>">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Denumire (EN)</label>
+                    <input type="text" name="denumire_en" class="form-control" required
+                           value="<?= htmlspecialchars($parohie['denumire_en']) ?>">
                 </div>
 
                 <div class="col-12">
