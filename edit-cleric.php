@@ -17,7 +17,6 @@ if (!$cleric_id) { die('<h3>Cleric inexistent.</h3>'); }
 
 
 
-
 /* ---------- 2. RANGURI (dropdown) ---------- */
 $ranguri = [];
 $res = $conn->query("SELECT id, denumire_ro FROM rang_administrativ ORDER BY id");
@@ -178,6 +177,10 @@ include 'header.php';
 ?>
 
 <body>
+    <!-- Select2 (search-box în <select>) -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <div class="container ">
     <div class="row gx-4">
         <aside class="col-md-3 mb-4"><?php include 'sidebar.php'; ?></aside>
@@ -292,9 +295,9 @@ include 'header.php';
                 <label class="form-label">Parohie</label>
                 <select
                     name="parohie_id"
-                    class="selectpicker form-select"
-                    data-live-search="true"
-                    title="— selectează parohia —"
+                    class="form-select select2"
+                    style="width:100%"
+                    data-placeholder="— selectează parohia —"
                     required
                 >
                     <?php foreach ($parohii as $pid => $den): ?>
@@ -336,12 +339,20 @@ include 'header.php';
 <?php include 'footer.php'; ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-    setTimeout(()=>{const el=document.getElementById('dispari');if(el)el.style.display='none';},2000);
+  /* ascunde mesajul flash după 2 secunde */
+  setTimeout(() => {
+    const el = document.getElementById('dispari');
+    if (el) el.style.display = 'none';
+  }, 2000);
 
-    $(document).ready(function(){
-        $('.selectpicker').selectpicker();
+  /* inițializează Select2 când DOM-ul e gata */
+  $(function () {
+    $('.select2').select2({
+      allowClear: true,
+      width: 'resolve'   // păstrează lățimea Bootstrap
     });
-
+  });
 </script>
+
 </body>
 </html>

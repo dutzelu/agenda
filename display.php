@@ -18,7 +18,7 @@ $sqlPar = "
             l.denumire_en AS localitate,
             p.denumire,
             COALESCE(p.hram_ro,p.hram_en) AS hram,
-            p.adresa, p.website, p.email,
+            p.data_hram_ro, p.adresa, p.website, p.email,
             tp.denumire_ro AS tip,        
             pr.protopop_id,
             pr.denumire_ro AS protopopiat_nume 
@@ -111,6 +111,9 @@ include 'header.php';
           $isSpecial = preg_match('/^(misiune|filie|paraclis|schit)/iu', $p['tip'] ?? '');
           echo '<p>'.($isSpecial ? '' : 'Parohia: ')
                . htmlspecialchars($p['denumire']);
+               if($p['data_hram_ro'] != NULL) {
+                  echo ' (' . $p['data_hram_ro'] . ')';
+               } 
           echo "</p>\n";
 
           /* detalii parohie */

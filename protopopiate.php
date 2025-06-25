@@ -40,21 +40,26 @@ $rez = $conn->query($sql);
 
 ?>
 <?php include 'header.php'; ?>
-<body>
-<div class="container ">
-    <div class="row gx-4">
-        <aside class="col-md-3 mb-4"><?php include 'sidebar.php'; ?></aside>
 
+<body>
+<div class="container">
+    <div class="row">
+        <!-- ------------  SIDEBAR  ------------ -->
+        <aside class="col-md-3 mb-4">
+            <?php include 'sidebar.php'; ?>
+        </aside>
+
+        <!-- ------------  CONŢINUT PRINCIPAL  ------------ -->
         <main class="col-md-9">
             <div class="d-flex justify-content-between align-items-center flex-wrap flex-md-nowrap pt-3 mb-3">
                 <h1 class="h2 mb-0">Protopopiate</h1>
 
-<?php if (!empty($_SESSION['flash'])): ?>
-    <div id="flash-msg" class="alert alert-success alert-dismissible fade show" role="alert">
-        <?= $_SESSION['flash']; unset($_SESSION['flash']); ?>
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-<?php endif; ?>
+        <?php if (!empty($_SESSION['flash'])): ?>
+            <div id="flash-msg" class="alert alert-success alert-dismissible fade show" role="alert">
+                <?= $_SESSION['flash']; unset($_SESSION['flash']); ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        <?php endif; ?>
 
                 <a href="add-protopopiat.php" class="btn btn-primary">Adaugă protopopiat</a>
             </div>

@@ -43,13 +43,15 @@ include "header.php";
 ?>
 
 <body>
-<div class="container mt-5 luna">
+<div class="container">
     <div class="row">
-        <div class="col-md-3 g-5">
+        <!-- ------------  SIDEBAR  ------------ -->
+        <aside class="col-md-3 mb-4">
             <?php include 'sidebar.php'; ?>
-        </div>
+        </aside>
 
-        <div class="col-md-9 navig_agenda">
+        <!-- ------------  CONŢINUT PRINCIPAL  ------------ -->
+        <main class="col-md-9 navig_agenda">
             
             <!-- Formular pentru selectarea lunii și anului -->
             <form method="GET" class="form-inline justify-content-center mb-3 d-flex align-items-center">

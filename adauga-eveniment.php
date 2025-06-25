@@ -80,17 +80,16 @@ $episcopi_result = $conn->query($episcopi_sql);
 $conn->close();
 include "header.php";
 ?>
-
 <body>
-<div class="container mt-5 mb-5">
+<div class="container">
     <div class="row">
-        <!-- Bara laterală -->
-        <div class="col-md-3 g-5">
-            <?php include 'sidebar.php';?>
-        </div>
-    
-        <!-- Conținut principal -->
-        <div class="col-md-9">
+        <!-- ------------  SIDEBAR  ------------ -->
+        <aside class="col-md-3 mb-4">
+            <?php include 'sidebar.php'; ?>
+        </aside>
+
+        <!-- ------------  CONŢINUT PRINCIPAL  ------------ -->
+        <main class="col-md-9">
             <h2>Adaugă eveniment</h2>
             <?php if ($success): ?>
                 <div class="alert alert-primary mt-4" id="dispari" role="alert">

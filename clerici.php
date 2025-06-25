@@ -160,6 +160,58 @@ function urlWith(array $extra = []): string
     return 'clerici.php?' . http_build_query(array_merge($base, $extra));
 }
 
+/* -------------------------------------------------------------------------
+ | Export CSV pentru CLERICI (UTF‑8 + BOM)
+ |--------------------------------------------------------------------------*/
+if (($_GET['export'] ?? '') === 'csv' && basename($_SERVER['PHP_SELF']) === 'clerici.php') {
+
+    // Majorăm limita pentru GROUP_CONCAT, dacă este necesar
+    $conn->query('SET SESSION group_concat_max_len = 65535');
+
+    $sqlExport = "
+        SELECT  c.id,
+                c.nume,
+                c.prenume,
+                ra.denumire_ro                                                                    AS rang,
+                COALESCE(
+                    GROUP_CONCAT(DISTINCT CONCAT('• ', p.denumire) ORDER BY p.denumire SEPARATOR 0x0A),
+                    ''
+                )                                                                                AS parohii
+        FROM clerici                c
+        JOIN rang_administrativ     ra ON ra.id  = c.rang_administrativ_id
+        LEFT JOIN clerici_parohii   cp ON cp.cleric_id = c.id AND cp.data_sfarsit IS NULL
+        LEFT JOIN parohii           p  ON p.id  = cp.parohie_id
+        $where_sql
+        GROUP BY c.id, c.nume, c.prenume, ra.denumire_ro
+        ORDER BY c.nume, c.prenume
+    ";
+
+    $stmt = $conn->prepare($sqlExport);
+    bindParams($stmt, $types, $values);
+    $stmt->execute();
+    $exportRes = $stmt->get_result();
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename=clerici_' . date('Ymd_His') . '.csv');
+
+    $out = fopen('php://output', 'w');
+    fwrite($out, "\xEF\xBB\xBF"); // UTF‑8 BOM pentru Excel
+
+    fputcsv($out, ['ID', 'Nume', 'Prenume', 'Rang', 'Parohii']);
+
+    while ($r = $exportRes->fetch_assoc()) {
+        fputcsv($out, [
+            $r['id'],
+            $r['nume'],
+            $r['prenume'],
+            $r['rang'],
+            $r['parohii']
+        ]);
+    }
+    exit;
+}
+/* ------------------------------------------------------------------------- */
+
 include 'header.php';
 ?> 
 
@@ -294,6 +346,12 @@ include 'header.php';
                 </ul>
             </nav>
             <?php endif; ?>
+            
+            <!--  Buton Export CSV pentru CLERICI (în zona filtre, înainte de tabel)  -->
+            <a href="clerici.php?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>"
+            class="btn btn-outline-primary mb-3">
+                <i class="bi bi-filetype-csv"></i> Export CSV
+            </a>
 
         </main>
     </div>

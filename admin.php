@@ -72,13 +72,13 @@ include 'header.php';
 <body>
 <div class="container">
     <div class="row">
-        <!-- Bara laterală -->
-        <div class="col-md-3 g-5">
+        <!-- ------------  SIDEBAR  ------------ -->
+        <aside class="col-md-3 mb-4">
             <?php include 'sidebar.php'; ?>
-        </div>
+        </aside>
 
-        <!-- Conținut principal -->
-        <div class="col-md-9">
+        <!-- ------------  CONŢINUT PRINCIPAL  ------------ -->
+        <main class="col-md-9">
             <h2>Evenimente</h2>
 
             <!-- Filtru după an -->

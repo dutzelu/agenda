@@ -24,12 +24,14 @@ $localitati   = fetchLookup($conn, 'localitati',   'id', 'denumire_en');
 $tipuri       = fetchLookup($conn, 'tip_parohie',  'id', 'denumire_ro');
 $protopopiate = fetchLookup($conn, 'protopopiate', 'id', 'denumire_ro');
 $parohii_all  = fetchLookup($conn, 'parohii',      'id', 'denumire');
+$parohii_all  = fetchLookup($conn, 'parohii',      'id', 'denumire_en');
 
 /* ---------- inițializare valori ---------- */
 $values = [
     'tara_id'        => '',
     'localitate_id'  => '',
     'denumire'       => '',
+    'denumire_en'    => '',
     'hram_ro'        => '',
     'hram_en'        => '',
     'tip_id'         => '',
@@ -59,19 +61,20 @@ $par_mama  = $values['parohie_mama_id'] !== '' ? (int)$values['parohie_mama_id']
 
 /* 2. pregătește statement-ul */
 $sql = "INSERT INTO parohii
-          (tara_id, localitate_id, denumire, hram_ro, hram_en,
+          (tara_id, localitate_id, denumire, denumire_en, hram_ro, hram_en,
            tip_parohie_id, protopopiat_id, parohie_mama_id,
            adresa, website, email)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?)";
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)";
 
 $stmt = $conn->prepare($sql);
 
 /* 3. leagă parametrii – TOȚI sunt variabile, nu expresii */
 $stmt->bind_param(
-    'iisssiiisss',
+    'iissssiiisss',
     $values['tara_id'],         // i
     $values['localitate_id'],   // i
     $values['denumire'],        // s
+    $values['denumire_en'],     // s
     $values['hram_ro'],         // s
     $values['hram_en'],         // s
     $values['tip_id'],          // i
@@ -134,9 +137,15 @@ include 'header.php';
                 </div>
 
                 <div class="col-12">
-                    <label class="form-label">Denumire</label>
+                    <label class="form-label">Denumire (RO)</label>
                     <input type="text" name="denumire" class="form-control" required
                            value="<?= htmlspecialchars($values['denumire']) ?>">
+                </div>
+
+                <div class="col-12">
+                    <label class="form-label">Denumire (EN)</label>
+                    <input type="text" name="denumire_en" class="form-control" required
+                           value="<?= htmlspecialchars($values['denumire_en']) ?>">
                 </div>
 
                 <div class="col-12">

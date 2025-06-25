@@ -18,7 +18,7 @@ $sqlPar = "
           l.denumire_en                 AS locality,
           p.denumire_en                 AS en_name,      -- NEW
           COALESCE(p.hram_en,p.hram_ro) AS patron,
-          p.adresa, p.website, p.email,
+          p.data_hram_en, p.adresa, p.website, p.email,
           tp.denumire_en                AS type_en,
           pr.protopop_id,
           pr.denumire_en                AS deanery_en
@@ -110,7 +110,14 @@ include 'header.php';
           /* omit “Parish:” for Mission / Chapel / Filial / Skete */
           $special = preg_match('/^(mission|chapel|filial|skete)/i', $p['type_en'] ?? '');
           echo '<p>'.($special?'':'Parish: ')
-               . htmlspecialchars($title)."</p>\n";
+               . htmlspecialchars($title);
+               
+                   if($p['data_hram_en'] != NULL) {
+                  echo ' (' . $p['data_hram_en'] . ')';
+               }      
+          echo "</p>\n";
+
+
 
           /* contact details */
           echo "<ul>\n";

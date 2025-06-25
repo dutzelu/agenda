@@ -157,6 +157,55 @@ if (isset($_GET['delete']) && ctype_digit($_GET['delete'])) {
 }
 
 
+/* Export CSV */
+if (($_GET['export'] ?? '') === 'csv') {
+
+    // aceeași interogare ca pentru listare, dar FĂRĂ LIMIT
+    $sqlExport = "
+        SELECT p.id,
+               tp.denumire_ro AS tip,
+               p.denumire,
+               p.adresa,
+               l.denumire_ro  AS localitate
+        FROM parohii           p
+        JOIN localitati        l  ON l.id  = p.localitate_id
+        JOIN tip_parohie       tp ON tp.id = p.tip_parohie_id
+        $where_sql
+        ORDER BY p.denumire
+    ";
+
+    $stmt = $conn->prepare($sqlExport);
+    bindParams($stmt, $types, $values);   // helper-ul tău existent
+    $stmt->execute();
+    $exportRes = $stmt->get_result();
+
+    header('Content-Type: text/csv; charset=UTF-8');
+    header('Content-Disposition: attachment; filename=parohii_' . date('Ymd_His') . '.csv');
+
+    $out = fopen('php://output', 'w');
+
+    /* ----------------------------------------------------------
+       Excel pe Windows detectează UTF‑8 doar dacă introducem BOM
+       — scriem secvenţa EF BB BF la începutul fluxului            
+    -----------------------------------------------------------*/
+    fwrite($out, "\xEF\xBB\xBF");
+
+    fputcsv($out, ['ID', 'Tip', 'Denumire', 'Adresă', 'Localitate']);
+
+    while ($r = $exportRes->fetch_assoc()) {
+        fputcsv($out, [
+            $r['id'],
+            $r['tip'],
+            $r['denumire'],
+            $r['adresa'],
+            $r['localitate']
+        ]);
+    }
+    exit;
+}
+/* ------------------------------------------------------------------------- */
+ 
+
 include "header.php";
 ?>
  
@@ -231,7 +280,7 @@ foreach ($labels as $key=>$label):
                             <th>#</th>
                             <th>Nume</th>
                             <th>Adresa</th>
-                            <th>Protopopiat</th>
+                            <th>Localitate</th>
                             <th class="text-center">Acțiuni</th>  <!-- NOU -->
                         </tr>
                     </thead>
@@ -297,6 +346,14 @@ foreach ($labels as $key=>$label):
                 </ul>
             </nav>
             <?php endif; ?>
+
+            <!--  Buton Export CSV (în zona filtre, înainte de tabel)  -->
+            <a href="parohii.php?<?= http_build_query(array_merge($_GET, ['export' => 'csv'])) ?>"
+            class="btn btn-outline-primary mb-3">
+                <i class="bi bi-filetype-csv"></i> Export CSV
+            </a>
+
+
 
         </main>
     </div>

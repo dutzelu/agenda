@@ -35,13 +35,15 @@ include "header.php";
 ?>
 
 <body>
-<div class="container mt-5 agenda">
+<div class="container">
     <div class="row">
-        <div class="col-md-3 g-5">
+        <!-- ------------  SIDEBAR  ------------ -->
+        <aside class="col-md-3 mb-4">
             <?php include 'sidebar.php'; ?>
-        </div>
+        </aside>
 
-        <div class="col-md-9">
+        <!-- ------------  CONŢINUT PRINCIPAL  ------------ -->
+        <main class="col-md-9">
             <?php
             $view = isset($_GET['view']) ? $_GET['view'] : 'week';
             $current_date_param = $view == 'month' ? 'month_start' : 'week_start';
