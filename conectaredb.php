@@ -1,10 +1,10 @@
 <?php
 
 // Conectare la baza de date
-$servername = "localhost";
-$username = "root";
-$password = "";
-$dbname = "agenda";
+$servername = "46.102.249.158";
+$username = "roarchor_claudiu";
+$password = "Parola*0920";
+$dbname = "roarchor_wordpress";
 
 $conn = new mysqli($servername, $username, $password, $dbname);
 

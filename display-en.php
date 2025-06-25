@@ -42,17 +42,27 @@ while ($r = $resPos->fetch_assoc()) $positions[$r['id']] = $r['denumire_en'];
 
 /*──── 4. clergy statement ────*/
 $sqlCl = "
-  SELECT  c.id,
-          c.nume, c.prenume,
-          c.telefon, c.email,
-          cp.pozitie_parohie_id,
-          ra.denumire_en AS adm_rank_en
+  SELECT
+      c.id,
+      c.nume,
+      c.prenume,
+      c.telefon,
+      c.email,
+      cp.pozitie_parohie_id,
+      ra.denumire_en AS adm_rank_en,
+      cp.sort_order            -- util la depanare; poţi să-l scoţi din SELECT dacă nu-l afişezi
   FROM    clerici_parohii cp
   JOIN    clerici              c  ON c.id = cp.cleric_id
   LEFT JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
   WHERE   cp.parohie_id = ?
     AND  (cp.data_sfarsit IS NULL OR cp.data_sfarsit > CURDATE())
-  ORDER BY cp.pozitie_parohie_id";
+  ORDER BY
+          (cp.sort_order IS NULL),
+          cp.sort_order ASC, 
+          cp.pozitie_parohie_id,
+          c.nume,
+          c.prenume;
+";
 $stmCl = $conn->prepare($sqlCl);
 
 /*──── 5. HTML skeleton ────*/

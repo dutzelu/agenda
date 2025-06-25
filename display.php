@@ -41,17 +41,27 @@ while ($r = $res->fetch_assoc()) $pozitii[$r['id']] = $r['denumire_ro'];
 
 /*────────  4. STATEMENT CLERICI PE PAROHIE  ────────*/
 $sqlCl = "
-    SELECT  c.id,
-            c.nume, c.prenume,
-            c.telefon, c.email,
-            cp.pozitie_parohie_id,
-            ra.denumire_ro AS rang_adm
-    FROM    clerici_parohii cp
-    JOIN    clerici             c  ON c.id = cp.cleric_id
-    LEFT JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
-    WHERE   cp.parohie_id = ?
-      AND  (cp.data_sfarsit IS NULL OR cp.data_sfarsit > CURDATE())
-    ORDER BY cp.pozitie_parohie_id";
+  SELECT  
+          c.id,
+          c.nume,
+          c.prenume,
+          c.telefon,
+          c.email,
+          cp.pozitie_parohie_id,
+          ra.denumire_ro AS rang_adm,
+          cp.sort_order
+  FROM    clerici_parohii cp
+  JOIN    clerici c  ON c.id = cp.cleric_id
+  LEFT JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
+  WHERE   cp.parohie_id = ?
+    AND  (cp.data_sfarsit IS NULL OR cp.data_sfarsit > CURDATE())
+  ORDER BY
+          (cp.sort_order IS NULL), 
+          cp.sort_order ASC,
+          cp.pozitie_parohie_id,
+          c.nume,
+          c.prenume;
+  ";
 $stmCl = $conn->prepare($sqlCl);
 
 /*────────  5. HEADER + LAYOUT  ────────*/
