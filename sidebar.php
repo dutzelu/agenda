@@ -1,5 +1,5 @@
 <a href="<?php echo BASE_URL;?>clerici.php">
-    <img src="https://roarch.org.uk/wp-content/uploads/2024/11/RoArch-ro.png" width="100%" class="mb-5">
+    <img src="https://roarch.org.uk/wp-content/uploads/2025/03/logo-roarch-RO@2x.png" width="100%" class="mb-5">
 </a>
 
 <div class="list-group mb-3">
