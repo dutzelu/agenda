@@ -55,7 +55,8 @@ $result_month = $stmt_month->get_result();
     <style>
         
 /* Agenda Episcopului */ 
-    .agenda ul {
+    
+.agenda ul {
     
     margin:0;
     padding:10px 18px;
@@ -153,6 +154,15 @@ a.btn-primary:nth-child(1){
 .row {
  --bs-gutter-x: 0!important;
 
+}
+
+/* Mobil */
+
+@media only screen and (max-width: 600px) {
+
+    .navig_agenda div.col-md-3:nth-child(1), .navig_agenda .col-md-6, .navig_agenda div.col-md-3:nth-child(3) {text-align:center!important;}
+
+    
 }
 
     </style>
