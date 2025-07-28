@@ -1,3 +1,4 @@
+<?php
 // Database connection
 $servername = "localhost";
 $username   = "roarchor_claudiu";
@@ -13,29 +14,29 @@ $conn->set_charset("utf8");
 /*────────  ALL MONASTERIES & SKETES (types 5 and 6)  ────────*/
 $sqlPar = "
     SELECT  p.id,
-            l.denumire_en AS locality,
-            p.denumire_en    AS name,
-            COALESCE(p.hram_en, p.hram_ro) AS patron,
-            p.data_hram_en,
+            l.denumire_ro AS locality,
+            p.denumire    AS name,
+            p.hram_ro AS patron,
+            p.data_hram_ro,
             p.adresa      AS address,
             p.website,
             p.email,
-            tp.denumire_en AS type,
+            tp.denumire_ro AS type,
             pr.protopop_id,
-            pr.denumire_en AS deanery_name
+            pr.denumire_ro AS deanery_name
     FROM    parohii p
     JOIN    localitati     l  ON l.id  = p.localitate_id
     LEFT JOIN tip_parohie  tp ON tp.id = p.tip_parohie_id
     LEFT JOIN protopopiate pr ON pr.id = p.protopopiat_id
     WHERE   p.tip_parohie_id IN (5, 6)
-    ORDER   BY l.denumire_en, p.denumire";
+    ORDER   BY l.denumire_ro, p.denumire";
 
 $parishes = $conn->query($sqlPar)->fetch_all(MYSQLI_ASSOC);
 
 /*────────  CLERGY POSITION VOCAB (EN)  ────────*/
 $positions = [];
-$res = $conn->query("SELECT id, denumire_en FROM pozitie_parohie");
-while ($r = $res->fetch_assoc()) $positions[$r['id']] = $r['denumire_en'];
+$res = $conn->query("SELECT id, denumire_ro FROM pozitie_parohie");
+while ($r = $res->fetch_assoc()) $positions[$r['id']] = $r['denumire_ro'];
 
 /*────────  CLERGY BY PARISH STATEMENT  ────────*/
 $sqlCl = "
@@ -45,7 +46,7 @@ $sqlCl = "
           c.telefon    AS phone,
           c.email,
           cp.pozitie_parohie_id,
-          ra.denumire_en AS adm_rank,
+          ra.denumire_ro AS adm_rank,
           cp.sort_order
   FROM    clerici_parohii cp
   JOIN    clerici c  ON c.id = cp.cleric_id
@@ -87,9 +88,9 @@ $stmCl = $conn->prepare($sqlCl);
 
         /* Patron (Feast day) */
         if ($p['patron']) {
-            echo '<p><strong>Patron:</strong> '.htmlspecialchars($p['patron']);
-            if ($p['data_hram_en']) {
-                echo ' (' . $p['data_hram_en'] . ')';
+            echo '<p><strong>Hram:</strong> '.htmlspecialchars($p['patron']);
+            if ($p['data_hram_ro']) {
+                echo ' (' . $p['data_hram_ro'] . ')';
             }
             echo '</p>';
         }
@@ -97,7 +98,7 @@ $stmCl = $conn->prepare($sqlCl);
         /* details */
         echo "<ul>\n";
         if ($p['address'])
-            echo '<li>Address: '.htmlspecialchars($p['address'])."</li>\n";
+            echo '<li>Adresă: '.htmlspecialchars($p['address'])."</li>\n";
         if ($p['website'])
             echo '<li>Website: <a href="'.htmlspecialchars($p['website']).'">'
                  .htmlspecialchars($p['website'])."</a></li>\n";
@@ -123,27 +124,27 @@ $stmCl = $conn->prepare($sqlCl);
             $line = '';
 
             // 1. Dean (Protopop)
-            if ($rank === 'Dean' || $rank === 'Protopop') {
-                $line = $position . ': Fr. ' . $surname . ' ' . $firstName . ' – Dean';
+            if ($rank === 'Protopop') {
+                $line = $position . ': PFr. ' . $surname . ' ' . $firstName . ' – Protopop';
             }
             // 2. Deacon
-            elseif ($position === 'Deacon') {
-                $line = 'Deacon: ' . $firstName . ' ' . $surname;
+            elseif ($position === 'Diacon') {
+                $line = 'Diacon: ' . $firstName . ' ' . $surname;
             }
             // 3. Parish Priest / Assistant Priest
-            elseif ($rank === 'Priest' || $rank === '') {
-                $line = $position . ': Fr. ' . $firstName . ' ' . $surname;
+            elseif ($rank === 'Preot' || $rank === '') {
+                $line = $position . ': Pr. ' . $firstName . ' ' . $surname;
             }
             // 4. Hieromonk / Protos.
-            elseif ($rank === 'Hieromonk' || strpos($rank, 'Protos') === 0) {
+            elseif ($rank === 'Ieromonah' || strpos($rank, 'Protos') === 0) {
                 $line = $position . ': ' . $rank . ' ' . $firstName . ' (' . $surname . ')';
             }
             // 5. Hierodeacon
-            elseif ($rank === 'Hierodeacon') {
-                $line = 'Hierodeacon ' . $firstName . ' (' . $surname . ')';
+            elseif ($rank === 'Ierodiacon') {
+                $line = 'Ierodiacon ' . $firstName . ' (' . $surname . ')';
             }
             // 6. Abbot
-            elseif (in_array($position, ['Abbot', 'Hegumen'])) {
+            elseif (in_array($position, ['Stareț', 'Egumen'])) {
                 $line = $position . ': ' . $rank . ' ' . $firstName . ' (' . $surname . ')';
             }
             // Fallback
@@ -157,7 +158,7 @@ $stmCl = $conn->prepare($sqlCl);
             if ($phone || $email) {
                 echo '<ul class="mb-2">';
                 if ($phone) {
-                    echo '<li>Phone: '.htmlspecialchars($phone).'</li>';
+                    echo '<li>Telefon: '.htmlspecialchars($phone).'</li>';
                 }
                 if ($email) {
                     echo '<li>Email: <a href="mailto:'.htmlspecialchars($email).'">'.htmlspecialchars($email).'</a></li>';

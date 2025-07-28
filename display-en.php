@@ -50,7 +50,7 @@ $sqlCl = "
       c.email,
       cp.pozitie_parohie_id,
       ra.denumire_en AS adm_rank_en,
-      cp.sort_order            -- util la depanare; poţi să-l scoţi din SELECT dacă nu-l afişezi
+      cp.sort_order    
   FROM    clerici_parohii cp
   JOIN    clerici              c  ON c.id = cp.cleric_id
   LEFT JOIN rang_administrativ ra ON ra.id = c.rang_administrativ_id
@@ -127,35 +127,66 @@ include 'header.php';
           echo "</ul>\n";
 
           /* clergy loop */
-          foreach ($clergy as $cl):
-              $pos   = $positions[$cl['pozitie_parohie_id']] ?? 'Clergy';
-              $name  = trim(($cl['prenume'] ?? '').' '.($cl['nume'] ?? ''));
+ foreach ($clergy as $cl): 
+            /* --- Raw data --- */
+            $positionRaw = $positions[$cl['pozitie_parohie_id']] ?? '';
+            $rankRaw     = $cl['adm_rank_en'] ?? '';
+            $firstName   = $cl['prenume'];
+            $surname     = $cl['nume'];
+            $phone       = $cl['telefon']  ?? '';
+            $email       = $cl['email']  ?? '';
 
-              $isProtos = stripos($cl['adm_rank_en'] ?? '', 'Protos') !== false;
-              $isDeacon = stripos($pos, 'Deacon') !== false;
-              $isDean   = ($p['protopop_id'] && $cl['id'] == $p['protopop_id']);
+            /* --- Title Case --- */
+            $position = mb_convert_case($positionRaw, MB_CASE_TITLE, 'UTF-8');
+            $rank     = mb_convert_case($rankRaw,    MB_CASE_TITLE, 'UTF-8');
 
-              if ($isProtos) {
-                  $line = 'Protos. '.htmlspecialchars($name);
-              } else {
-                  $prefix = $isDeacon ? '' : 'Fr. ';
-                  $line   = htmlspecialchars($pos).': '.$prefix.htmlspecialchars($name);
+            /* --- Main line --- */
+            $line = '';
 
-                  if ($isDean && $p['deanery_en'])
-                      $line .= ' – dean of '.htmlspecialchars($p['deanery_en']);
-              }
+            // 1. Dean (Protopop)
+            if ($rank === 'Dean' || $rank === 'Protopop') {
+                $line = $position . ': Fr. ' . $surname . ' ' . $firstName . ' – Dean';
+            }
+            // 2. Deacon
+            elseif ($position === 'Deacon') {
+                $line = 'Deacon: ' . $firstName . ' ' . $surname;
+            }
+            // 3. Parish Priest / Assistant Priest
+            elseif ($rank === 'Priest' || $rank === '') {
+                $line = $position . ': Fr. ' . $firstName . ' ' . $surname;
+            }
+            // 4. Hieromonk / Protos.
+            elseif ($rank === 'Hieromonk' || strpos($rank, 'Protos') === 0) {
+                $line = $position . ': ' . $rank . ' ' . $firstName . ' (' . $surname . ')';
+            }
+            // 5. Hierodeacon
+            elseif ($rank === 'Hierodeacon') {
+                $line = 'Hierodeacon ' . $firstName . ' (' . $surname . ')';
+            }
+            // 6. Abbot
+            elseif (in_array($position, ['Stareț', 'Abbot'])) {
+                $line = $position . ': ' . $rank . ' ' . $firstName . ' (' . $surname . ')';
+            }
+            // Fallback
+            else {
+                $line = $position . ': ' . $firstName . ' ' . $surname;
+            }
 
-              echo "<p>" . ucfirst($line) . "</p>\n";
+            /* --- Output --- */
+            echo '<p>' . htmlspecialchars($line) . '</p>';
 
-              if ($cl['telefon'] || $cl['email']) {
-                  echo "<ul>\n";
-                  if ($cl['telefon'])
-                      echo '<li>Phone: '.htmlspecialchars($cl['telefon'])."</li>\n";
-                  if ($cl['email'])
-                      echo '<li>Email: '.htmlspecialchars($cl['email'])."</li>\n";
-                  echo "</ul>\n";
-              }
-          endforeach;
+            if ($phone || $email) {
+                echo '<ul class="mb-2">';
+                if ($phone) {
+                    echo '<li>Phone: ' . htmlspecialchars($phone) . '</li>';
+                }
+                if ($email) {
+                    echo '<li>Email: <a href="mailto:' . htmlspecialchars($email) . '">' . htmlspecialchars($email) . '</a></li>';
+                }
+                echo '</ul>';
+            }
+        endforeach;
+
 
           echo "<p>&nbsp;</p>\n";
           $idx++;

@@ -90,7 +90,6 @@ $total_pages = max(1, (int)ceil($total_rows / $per_page));
             SUM(tp.denumire_ro = 'misiune') AS misiune_cnt,
             SUM(tp.denumire_ro = 'filie')   AS filie_cnt,
             SUM(tp.denumire_ro = 'mănăstire') AS manastire_cnt,
-            SUM(tp.denumire_ro = 'catedrala arhiepiscopala') AS catedrala_cnt,
             SUM(tp.denumire_ro = 'paraclis arhiepiscopal') AS paraclis_cnt,
             SUM(tp.denumire_ro = 'schit')  AS schit_cnt
         FROM parohii p
@@ -230,10 +229,9 @@ $labels = [
     'all'       => 'Toate',
     'parohie'   => 'Parohii',
     'misiune'   => 'Misiuni',
+    'paraclis arhiepiscopal' => 'Paraclise',
     'filie'     => 'Filii',
     'manastire' => 'Mănăstiri',
-    'catedrala arhiepiscopala' => 'Catedrale',
-    'paraclis arhiepiscopal' => 'Paraclise',
     'schit'     => 'Schituri'
 ];
 $count_map = [

@@ -87,7 +87,7 @@ $stmCl = $conn->prepare($sqlCl);
 
         /* Patron (Feast day) */
         if ($p['patron']) {
-            echo '<p><strong>Patron:</strong> '.htmlspecialchars($p['patron']);
+            echo '<p><strong>Patronal Fiest:</strong> '.htmlspecialchars($p['patron']);
             if ($p['data_hram_en']) {
                 echo ' (' . $p['data_hram_en'] . ')';
             }
