@@ -1,6 +1,4 @@
-body {
-margin:2%;
-}
+
 
 a {
     text-decoration: none;
@@ -184,3 +182,11 @@ ul.zile-suplimentare {
 
 
 }
+
+body {
+margin:2%!important;
+}
+
+ #tbl-citate tbody tr.row-link:hover {
+        background-color: #f5f5f5;   /* gri foarte deschis */
+    }

@@ -28,3 +28,8 @@
     <a href="add-protopopiat.php" class="list-group-item list-group-item-action">Protopopiat</a>
     <a href="add-localitate.php" class="list-group-item list-group-item-action">Localitate</a>
 </div>
+
+<div class="list-group mb-3">
+    <p><b>Citate</b></p>
+    <a href="citate.php" class="list-group-item list-group-item-action">Lista citate</a>
+    <a href="adauga-citat.php" class="list-group-item list-group-item-action">Adauga citat</a>
